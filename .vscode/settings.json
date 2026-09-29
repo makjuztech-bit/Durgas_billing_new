@@ -1,0 +1,37 @@
+{
+  "search.followSymlinks": false,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.pnpm": true,
+    "**/.wine": true,
+    "**/releases": true,
+    "**/dist": true,
+    "**/dist-electron": true,
+    "**/build": true,
+    "**/*.sqlite*": true,
+    "**/printer driver": true,
+    "**/*.patch": true,
+    "**/*.tar.gz": true,
+    "**/*.zip": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.pnpm/**": true,
+    "**/.wine/**": true,
+    "**/releases/**": true,
+    "**/dist/**": true,
+    "**/dist-electron/**": true,
+    "**/build/**": true,
+    "**/*.sqlite*": true,
+    "**/printer driver/**": true,
+    "**/*.patch": true,
+    "**/*.tar.gz": true,
+    "**/*.zip": true
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.wine": true
+  }
+}
