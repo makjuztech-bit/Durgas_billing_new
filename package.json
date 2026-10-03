@@ -1,7 +1,7 @@
 {
   "name": "durgas-billing-pos",
   "private": true,
-  "version": "1.0.31",
+  "version": "1.0.32",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
@@ -9,10 +9,11 @@
     "dev:full": "npm run dev",
     "dev:backend": "node backend/server.js",
     "dev:frontend": "vite",
-    "electron:dev": "concurrently -k -n \"BACKEND,FRONTEND,ELECTRON\" -c \"cyan.bold,magenta.bold,yellow.bold\" \"node backend/server.js\" \"vite\" \"wait-on tcp:8080 -t 30s && cross-env NODE_ENV=development electron . --dev\"",
-    "electron:dev:app": "wait-on tcp:8080 -t 30s && cross-env NODE_ENV=development electron . --dev",
-    "electron:start": "electron .",
-    "electron:preview": "npm run build && electron .",
+    "dev:electron": "npm run electron:dev",
+    "electron:dev": "concurrently -k -n \"BACKEND,FRONTEND,ELECTRON\" -c \"cyan.bold,magenta.bold,yellow.bold\" \"node backend/server.js\" \"vite\" \"wait-on tcp:8080 -t 30s && node scripts/run-electron.cjs --dev\"",
+    "electron:dev:app": "wait-on tcp:8080 -t 30s && node scripts/run-electron.cjs --dev",
+    "electron:start": "node scripts/run-electron.cjs",
+    "electron:preview": "npm run build && node scripts/run-electron.cjs",
     "electron:build": "node scripts/package-electron.cjs",
     "package:app": "node scripts/package-electron.cjs",
     "start": "npm run dev",
@@ -20,12 +21,15 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
     "test:server": "node backend/tests/server.test.js",
     "test:all": "npm test && npm run test:server",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "barcode:studio": "vite --config tools/barcode-tester/vite.config.ts tools/barcode-tester",
+    "barcode:build": "vite build tools/barcode-tester",
+    "barcode:test": "vitest run --config tools/barcode-tester/vitest.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -6,24 +6,6 @@
  * as used by the Durgas Jewellers POS application.
  */
 
-// Standalone ambient declarations ensuring clean compilation across environments
-declare module 'fs' {
-  export function writeFileSync(path: string, data: any, encoding?: string): void;
-  export function mkdirSync(path: string, options?: { recursive?: boolean }): void;
-  export function readFileSync(path: string, encoding?: string): string;
-  export function existsSync(path: string): boolean;
-}
-declare module 'path' {
-  export function resolve(...paths: string[]): string;
-  export function join(...paths: string[]): string;
-}
-declare const process: {
-  cwd(): string;
-  exit(code?: number): never;
-  stdout: any;
-  stderr: any;
-};
-
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -44,7 +26,7 @@ import {
   decodeCode128FromRuns,
   encodeCode128SvgBars,
 } from '../src/lib/label-testing/barcodeVerifier.ts';
-import { LOGO_EMBLEM_BASE64 } from '../src/components/barcode/logoEmblemBase64.ts';
+import { LOGO_EMBLEM_BASE64 } from '../../../src/components/barcode/logoEmblemBase64';
 import { verifyPaperFit } from '../src/lib/label-testing/paperFitCalibrator.ts';
 
 // -----------------------------------------------------------------------------

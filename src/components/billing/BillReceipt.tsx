@@ -265,7 +265,7 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>((props, 
             <div className="flex flex-col sm:flex-row justify-between items-start pb-4 border-b-2 border-primary mb-4 gap-4">
               <div className="flex items-start gap-4 min-w-0 max-w-full sm:max-w-[72%] text-left">
                 <img
-                  src={settings?.logoUrl || '/logo.png'}
+                  src={settings?.logoUrl || '/durgas-logo.jpeg'}
                   alt={shopName}
                   className="h-20 w-20 object-contain rounded-lg shrink-0 border border-amber-200/50 p-1 bg-white shadow-2xs"
                 />

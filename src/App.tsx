@@ -27,8 +27,6 @@ const Reports = lazy(() => import("./pages/Reports"));
 const GstReports = lazy(() => import("./pages/GstReports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Profile = lazy(() => import("./pages/Profile"));
-const BarcodeGenerator = lazy(() => import("./pages/BarcodeGenerator"));
-const LabelTestingStudioPage = lazy(() => import("./pages/LabelTestingStudioPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Missing / Orphaned Pages
@@ -113,8 +111,6 @@ const AppRoutes = () => {
           <Route path="/staff" element={<StaffManagement />} />
           <Route path="/customers" element={<CustomerManagement />} />
           <Route path="/inventory" element={<Inventory />} />
-          <Route path="/barcode-generator" element={<BarcodeGenerator />} />
-          <Route path="/label-testing" element={<LabelTestingStudioPage />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/gst-reports" element={<GstReports />} />

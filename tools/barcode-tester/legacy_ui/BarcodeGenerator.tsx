@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Printer, RotateCcw, FileDown, FlaskConical } from 'lucide-react';
+import { Printer, RotateCcw, FileDown } from 'lucide-react';
 import { useData } from '@/contexts/DataContext';
 import { Saree } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -167,9 +167,6 @@ const BarcodeGenerator: React.FC = () => {
           <p className="text-muted-foreground">Select products, configure stickers, and print on A4 sheets or thermal roll printers.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => navigate('/label-testing')} className="shadow-sm border border-primary/20 text-xs font-semibold">
-            <FlaskConical className="mr-1.5 h-4 w-4 text-primary" /> Label Testing Studio
-          </Button>
           <Button variant="outline" onClick={handleReset}>
             <RotateCcw className="mr-2 h-4 w-4" /> Reset
           </Button>

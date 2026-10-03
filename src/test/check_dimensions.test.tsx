@@ -1,8 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { BillReceipt } from '../components/billing/BillReceipt';
 import { BillingPreviewCard } from '../components/billing/BillingPreviewCard';
+
+function render(ui: React.ReactElement) {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  act(() => {
+    root.render(ui);
+  });
+  return { container, unmount: () => root.unmount() };
+}
 
 describe('A4 Bill Dimensions & Full Length Calculations', () => {
   it('BillReceipt renders with exact A4 geometry 794px by 1123px directly on the invoice element', () => {
@@ -25,9 +35,9 @@ describe('A4 Bill Dimensions & Full Length Calculations', () => {
     expect(invoiceEl.style.minHeight).toBe('1123px');
 
     // Bottom section must exist with Authorized Signatory
-    expect(screen.getAllByText(/Authorized Signatory/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Store Terms & Exchange Policy/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/NET GRAND TOTAL/i).length).toBeGreaterThan(0);
+    expect(container.textContent).toContain('Authorized Signatory');
+    expect(container.textContent).toContain('Store Terms & Exchange Policy');
+    expect(container.textContent).toContain('NET GRAND TOTAL');
   });
 
   it('BillingPreviewCard provides Full Page, Fit Width and 100% zoom controls for A4 bills', () => {
@@ -51,9 +61,10 @@ describe('A4 Bill Dimensions & Full Length Calculations', () => {
     );
 
     // Zoom buttons present
-    expect(screen.getByRole('button', { name: /Full Page/i })).not.toBeNull();
-    expect(screen.getByRole('button', { name: /Fit Width/i })).not.toBeNull();
-    expect(screen.getByRole('button', { name: /100%/i })).not.toBeNull();
+    const buttons: HTMLButtonElement[] = Array.from(container.querySelectorAll('button'));
+    expect(buttons.some(b => b.textContent?.includes('Full Page'))).toBe(true);
+    expect(buttons.some(b => b.textContent?.includes('Fit Width'))).toBe(true);
+    expect(buttons.some(b => b.textContent?.includes('100%'))).toBe(true);
 
     // Verify the scaled layout container exists and inner invoice is positioned exactly at top: 0, left: 0
     const invoiceWrapper = container.querySelector('[style*="position: absolute"]') as HTMLElement;
@@ -63,8 +74,11 @@ describe('A4 Bill Dimensions & Full Length Calculations', () => {
     expect(invoiceWrapper.style.transformOrigin).toBe('top left');
 
     // Click Expand to open fullscreen modal
-    const expandBtn = screen.getByRole('button', { name: /Expand/i });
-    fireEvent.click(expandBtn);
-    expect(screen.getByText(/Standard A4 Tax Invoice Preview/i)).not.toBeNull();
+    const expandBtn = buttons.find(b => b.textContent?.includes('Expand'));
+    expect(expandBtn).toBeDefined();
+    act(() => {
+      expandBtn?.click();
+    });
+    expect(document.body.textContent).toContain('Standard A4 Tax Invoice Preview');
   });
 });

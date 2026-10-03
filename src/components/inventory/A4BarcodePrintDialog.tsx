@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Barcode from 'react-barcode';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   Printer,
   Sparkles,
@@ -54,6 +55,9 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
   const [name, setName] = useState('Gold Necklace');
   const [barcode, setBarcode] = useState('SK-100101');
   const [price, setPrice] = useState<number>(4999);
+
+  // Code format: 'qr' or 'barcode' (Code 128)
+  const [codeType, setCodeType] = useState<'qr' | 'barcode'>('qr');
 
   // Paper & Label configuration
   const [paperSizeId, setPaperSizeId] = useState<string>('JEWELRY_DUMBBELL');
@@ -233,6 +237,7 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
       columnsCount: layout.columns,
       labelWidthMm,
       labelHeightMm,
+      codeType,
       barcodeBarHeight: barcodeHeight,
       barcodeBarWidth: barcodeWidth,
       flapLeftWidthPct,
@@ -261,6 +266,7 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
       columnsCount: layout.columns,
       labelWidthMm,
       labelHeightMm,
+      codeType,
       flapLeftWidthPct,
       flapRightWidthPct,
     });
@@ -283,17 +289,25 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
               </div>
               <div>
                 <DialogTitle className="text-base sm:text-lg font-bold font-display">
-                  Print Barcode Sticker Labels
+                  Print Barcode &amp; QR Sticker Labels
                 </DialogTitle>
                 <DialogDescription className="text-xs mt-0.5">
-                  Print barcode labels on standard A4 sticker sheets or thermal roll printers.
+                  Print QR code or barcode labels on standard A4 sticker sheets or thermal roll printers.
                 </DialogDescription>
               </div>
             </div>
 
-            {/* Barcode Health Badge */}
+            {/* Barcode / QR Health Badge */}
             <div className="flex items-center gap-2 shrink-0">
-              {barcodeValidation.valid ? (
+              {codeType === 'qr' ? (
+                <Badge
+                  variant="outline"
+                  className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs py-1 px-2.5 flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  2D QR Code • Scanner &amp; Mobile Ready
+                </Badge>
+              ) : barcodeValidation.valid ? (
                 <Badge
                   variant="outline"
                   className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs py-1 px-2.5 flex items-center gap-1.5"
@@ -451,9 +465,48 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
               )}
             </div>
 
-            {/* Step 4: Content on Label */}
+            {/* Step 4: Code Format (QR vs Barcode) */}
+            <div className="space-y-1.5 bg-muted/30 p-3 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-primary">Step 4: Code Format</Label>
+                <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-bold">
+                  {codeType === 'qr' ? '2D QR Code' : '1D Barcode'}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCodeType('qr')}
+                  className={`h-8 text-xs font-medium justify-center gap-1.5 ${
+                    codeType === 'qr'
+                      ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                      : ''
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                  QR Code (Default)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCodeType('barcode')}
+                  className={`h-8 text-xs font-medium justify-center gap-1.5 ${
+                    codeType === 'barcode'
+                      ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                      : ''
+                  }`}
+                >
+                  Barcode (1D)
+                </Button>
+              </div>
+            </div>
+
+            {/* Step 5: Content on Label */}
             <div className="space-y-2 bg-muted/30 p-3 rounded-lg border">
-              <Label className="text-xs font-semibold text-primary">Step 4: Information on Label</Label>
+              <Label className="text-xs font-semibold text-primary">Step 5: Information on Label</Label>
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex items-center gap-1.5">
                   <Switch checked={showStoreName} onCheckedChange={setShowStoreName} />
@@ -470,13 +523,17 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
               </div>
             </div>
 
-            {/* Step 4b: Barcode Graphic Dimensions */}
+            {/* Step 5b: Code Graphic Dimensions */}
             <div className="space-y-2 bg-muted/30 p-3 rounded-lg border">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-primary">Barcode Graphic Size</Label>
-                <span className="text-[10px] text-muted-foreground font-mono">
-                  H: {barcodeHeight}px | W: {barcodeWidth}x
-                </span>
+                <Label className="text-xs font-semibold text-primary">
+                  {codeType === 'qr' ? 'QR Code & Label Dimensions' : 'Barcode Graphic Size'}
+                </Label>
+                {codeType === 'barcode' && (
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    H: {barcodeHeight}px | W: {barcodeWidth}x
+                  </span>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
@@ -710,16 +767,25 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
                            <div className="text-[5px] font-bold uppercase truncate max-w-[55%] min-w-0 text-left text-slate-700" style={{ fontFamily: '"Inter", sans-serif' }}>{showItemName ? name : 'ITEM'}</div>
                            <div className="text-[6px] font-black tracking-tight text-right text-black whitespace-nowrap shrink-0 ml-1" style={{ fontFamily: '"Inter", sans-serif' }}>₹{showPrice ? price.toLocaleString('en-IN') : '0'}</div>
                          </div>
-                         <div className="w-full flex justify-center origin-center px-0.5 box-border overflow-hidden h-[18px]">
-                           <Barcode
-                             value={barcode || 'SK-000000'}
-                             width={1.0}
-                             height={18}
-                             fontSize={0}
-                             margin={2}
-                             displayValue={false}
-                             background="transparent"
-                           />
+                         <div className="w-full flex justify-center items-center origin-center px-0.5 box-border overflow-hidden h-[20px]">
+                           {codeType === 'qr' ? (
+                             <QRCodeSVG
+                               value={barcode || 'SK-000000'}
+                               size={20}
+                               level="M"
+                               includeMargin={false}
+                             />
+                           ) : (
+                             <Barcode
+                               value={barcode || 'SK-000000'}
+                               width={1.0}
+                               height={18}
+                               fontSize={0}
+                               margin={2}
+                               displayValue={false}
+                               background="transparent"
+                             />
+                           )}
                          </div>
                          <span className="text-[5px] font-bold text-slate-900 font-mono text-center mt-0.5 whitespace-nowrap" style={{ letterSpacing: '0.5px' }}>{barcode}</span>
                       </div>
@@ -731,12 +797,12 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
               <p className="text-[11px] text-muted-foreground text-center mt-2.5">
                 {isThermal ? (
                   <span>
-                    Continuous thermal roll mode: Exactly <strong>{totalCount} barcode stickers</strong> will be
+                    Continuous thermal roll mode: Exactly <strong>{totalCount} {codeType === 'qr' ? 'QR' : 'barcode'} stickers</strong> will be
                     printed.
                   </span>
                 ) : (
                   <span>
-                    Printing <strong>{totalCount} barcode labels</strong> across{' '}
+                    Printing <strong>{totalCount} {codeType === 'qr' ? 'QR' : 'barcode'} labels</strong> across{' '}
                     <strong>{layout.totalPages} A4 sticker sheet(s)</strong>.
                   </span>
                 )}
@@ -745,11 +811,11 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
 
             <div className="pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">
-                Target: <strong>{isThermal ? 'Thermal Barcode Printer' : 'Standard A4 Sticker Sheet'}</strong>
+                Target: <strong>{isThermal ? 'Thermal Barcode & QR Printer' : 'Standard A4 Sticker Sheet'}</strong>
               </span>
               <Button onClick={handlePrint} className="gap-2 bg-primary w-full sm:w-auto shadow-sm">
                 <Printer className="h-4 w-4" />
-                Print {totalCount} Barcode Labels
+                Print {totalCount} {codeType === 'qr' ? 'QR' : 'Barcode'} Labels
               </Button>
               <Button onClick={handleDownloadPdf} variant="outline" className="gap-2 w-full sm:w-auto shadow-sm">
                 <FileDown className="h-4 w-4" />

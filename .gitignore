@@ -38,6 +38,7 @@ coverage/
 *.dmg
 *.deb
 *.AppImage
+*.tsbuildinfo
 
 # Wine prefix & emulation artifacts
 .wine

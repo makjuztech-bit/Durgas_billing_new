@@ -27,6 +27,7 @@ interface DataContextType {
     addStaff: (staff: Staff) => Promise<void>;
     bills: Bill[];
     addBill: (bill: Bill) => Promise<Bill>;
+    updateBill: (id: string, updates: Partial<Bill>) => Promise<Bill | void>;
     deleteBill: (id: string) => Promise<void>;
     clearAllBills: () => Promise<void>;
     settings: StoreSettings;
@@ -54,7 +55,7 @@ const defaultSettings: StoreSettings = {
     email: 'durgaspos@gmail.com',
     gstNo: '33BWZPN2210D1ZO',
     gstin: '33BWZPN2210D1ZO',
-    logoUrl: '/logo.png',
+    logoUrl: '/durgas-logo.jpeg',
     currency: 'INR',
     taxRate: 5,
 };
@@ -442,6 +443,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return fallbackBill;
     };
 
+    const updateBill = async (id: string, updates: Partial<Bill>): Promise<Bill | void> => {
+        try {
+            await api.patch(`/bills/${id}/status`, updates).catch(() => {});
+        } catch (error) {
+            console.warn('Updating bill in local fallback mode:', error);
+        }
+        setBills(prev => {
+            const updated = prev.map(b => (b.id === id || b.billNo === id ? { ...b, ...updates } : b));
+            localStorage.setItem('durgas_bills', JSON.stringify(updated));
+            return updated;
+        });
+        toast.success('Bill updated successfully');
+    };
+
     const deleteBill = async (id: string): Promise<void> => {
         try {
             await api.delete(`/bills/${id}`);
@@ -514,6 +529,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 addOrder,
                 addStaff,
                 addBill,
+                updateBill,
                 deleteBill,
                 clearAllBills,
                 settings,

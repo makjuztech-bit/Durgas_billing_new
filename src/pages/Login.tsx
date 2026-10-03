@@ -110,7 +110,7 @@ export const Login: React.FC = () => {
           {/* Logo Section */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white/90 backdrop-blur shadow-md mb-4 border border-amber-200">
-              <img src="./logo.png" alt="Durgas" className="h-24 w-auto object-contain" />
+              <img src="./durgas-logo.jpeg" alt="Durgas" className="h-24 w-auto object-contain" />
             </div>
             <div className="text-xs font-bold text-amber-600 mb-0.5">
               துர்காஸ்

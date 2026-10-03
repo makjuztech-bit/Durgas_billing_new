@@ -12,7 +12,6 @@ import {
   FileText,
   Settings,
   ChevronDown,
-  Scan,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -54,8 +53,6 @@ const routeLoaders: Record<string, () => Promise<unknown>> = {
   '/staff': () => import('../../pages/StaffManagement'),
   '/customers': () => import('../../pages/CustomerManagement'),
   '/inventory': () => import('../../pages/Inventory'),
-  '/barcode-generator': () => import('../../pages/BarcodeGenerator'),
-  '/label-testing': () => import('../../pages/LabelTestingStudioPage'),
   '/expenses': () => import('../../pages/Expenses'),
   '/reports': () => import('../../pages/Reports'),
   '/gst-reports': () => import('../../pages/GstReports'),
@@ -97,8 +94,6 @@ const navGroups: NavGroup[] = [
       { title: 'Customers', titleKey: 'Customers', url: '/customers', icon: UserCog },
       { title: 'Due Collection', titleKey: 'Due Collection', url: '/due-management', icon: DollarSign },
       { title: 'Inventory', titleKey: 'Inventory', url: '/inventory', icon: Package },
-      { title: 'Barcode Generator', titleKey: 'Barcode Generator', url: '/barcode-generator', icon: Package },
-      { title: 'Label Testing Studio', titleKey: 'Label Testing Studio', url: '/label-testing', icon: Scan },
       { title: 'Purchase Returns', titleKey: 'Purchase Returns', url: '/purchase-return', icon: Package },
       { title: 'Expenses', titleKey: 'Expenses', url: '/expenses', icon: DollarSign },
       { title: 'WhatsApp', titleKey: 'WhatsApp', url: '/whatsapp-messenger', icon: Users },
@@ -129,7 +124,7 @@ export const AppSidebar: React.FC = () => {
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-3">
           <img
-            src="./logo.png"
+            src="./durgas-logo.jpeg"
             alt="Durgas"
             className="h-10 w-10 object-contain rounded-lg bg-white p-0.5 shadow-sm border border-amber-200/50 shrink-0"
           />

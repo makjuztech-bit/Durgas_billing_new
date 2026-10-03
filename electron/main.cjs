@@ -3,6 +3,21 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox');
+  app.commandLine.appendSwitch('disable-gpu-sandbox');
+
+  const waylandDisplay = process.env.WAYLAND_DISPLAY || 'wayland-0';
+  const xdgRuntimeDir = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid ? process.getuid() : 1000}`;
+  const waylandSocket = path.join(xdgRuntimeDir, waylandDisplay);
+  if (process.env.WAYLAND_DISPLAY && !fs.existsSync(waylandSocket)) {
+    delete process.env.WAYLAND_DISPLAY;
+    app.commandLine.appendSwitch('ozone-platform', 'x11');
+  } else if (!process.env.WAYLAND_DISPLAY && process.env.DISPLAY) {
+    app.commandLine.appendSwitch('ozone-platform', 'x11');
+  }
+}
+
 let mainWindow = null;
 let serverProcess = null;
 

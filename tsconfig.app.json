@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": [],
+    "types": ["react", "react-dom", "node"],
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": [

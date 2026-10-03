@@ -1,7 +1,66 @@
+import React from 'react';
+import { renderToString } from 'react-dom/server';
+import { QRCodeSVG } from 'qrcode.react';
 import { Saree } from '@/types';
 import JsBarcode from 'jsbarcode';
 import { jsPDF } from 'jspdf';
 import { LOGO_EMBLEM_BASE64 } from './logoEmblemBase64';
+
+export function createQrSvg(code: string, size: number = 64): string {
+  try {
+    const cleanCode = (code || '').trim();
+    if (!cleanCode) {
+      return `<div style="font-family: monospace; font-size: 7px; font-weight: bold; text-align: center;">EMPTY</div>`;
+    }
+    return renderToString(
+      React.createElement(QRCodeSVG, {
+        value: cleanCode,
+        size: size,
+        level: 'M',
+        includeMargin: false,
+      })
+    );
+  } catch (err) {
+    console.error('Failed to create QR SVG:', err);
+    return `<div style="font-family: monospace; font-size: 7px; font-weight: bold; text-align: center;">${code}</div>`;
+  }
+}
+
+export function createQrDataUrl(code: string, pixelSize: number = 180): string {
+  try {
+    const cleanCode = (code || '').trim();
+    if (!cleanCode || typeof document === 'undefined') return '';
+    const svgStr = createQrSvg(cleanCode, pixelSize);
+    const vbMatch = svgStr.match(/viewBox="0 0 (\d+) (\d+)"/);
+    const modules = vbMatch ? parseInt(vbMatch[1], 10) : 21;
+    const dMatch = svgStr.match(/fill="#000000"\s+d="([^"]+)"/);
+    const pathD = dMatch ? dMatch[1] : '';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = pixelSize;
+    canvas.height = pixelSize;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, pixelSize, pixelSize);
+
+    if (pathD && typeof Path2D !== 'undefined') {
+      ctx.fillStyle = '#000000';
+      const scale = pixelSize / modules;
+      ctx.save();
+      ctx.scale(scale, scale);
+      const path = new Path2D(pathD);
+      ctx.fill(path);
+      ctx.restore();
+    }
+
+    return canvas.toDataURL('image/png');
+  } catch (err) {
+    console.error('Error generating QR data URL:', err);
+    return '';
+  }
+}
 
 export function createBarcodeSvg(
   code: string,
@@ -89,6 +148,7 @@ export interface BarcodePrintOptions {
   columnsCount: number;
   labelWidthMm: number;
   labelHeightMm: number;
+  codeType?: 'qr' | 'barcode';
   barcodeBarHeight?: number;
   barcodeBarWidth?: number;
   barcodeSvgHtml?: string;
@@ -122,6 +182,7 @@ export function printBarcodeLabels(options: BarcodePrintOptions): void {
     columnsCount,
     labelWidthMm,
     labelHeightMm,
+    codeType = 'qr',
     barcodeBarHeight = 24,
     barcodeBarWidth = 1.15,
     flapLeftWidthPct = 33,
@@ -169,7 +230,10 @@ export function printBarcodeLabels(options: BarcodePrintOptions): void {
     : Math.max(6.0, Math.min(26.0, (labelHeightMm - 8.0) * 0.75));
 
   const renderLabelHtml = (code: string) => {
-    const svgCode = createBarcodeSvg(code, barcodeBarHeight, barcodeBarWidth);
+    const isQr = codeType === 'qr';
+    const svgCode = isQr
+      ? createQrSvg(code, 64)
+      : createBarcodeSvg(code, barcodeBarHeight, barcodeBarWidth);
     const itemName = (showProductName && selectedProduct) ? selectedProduct.name.substring(0, 16) : 'GOLD ORNAMENT';
     const priceText = showPrice ? (selectedProduct?.sellingPrice?.toLocaleString('en-IN') || '0') : '0';
     const weightVal = selectedProduct?.weight || '8.000g';
@@ -191,7 +255,7 @@ export function printBarcodeLabels(options: BarcodePrintOptions): void {
           <span class="flap-item">${itemName}</span>
           <span class="flap-price">₹${priceText}</span>
         </div>
-        <div class="barcode-box">
+        <div class="barcode-box ${isQr ? 'qr-box' : ''}">
           ${svgCode}
         </div>
         ${showBarcodeText ? `<div class="barcode-num">${code}</div>` : ''}
@@ -624,6 +688,14 @@ export function printBarcodeLabels(options: BarcodePrintOptions): void {
             display: block !important;
             shape-rendering: crispEdges !important;
           }
+          .barcode-box.qr-box svg {
+            width: ${barcodeBoxHeightMm}mm !important;
+            height: ${barcodeBoxHeightMm}mm !important;
+            max-width: ${barcodeBoxHeightMm}mm !important;
+            max-height: ${barcodeBoxHeightMm}mm !important;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+          }
           .barcode-num {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
             font-size: 3.5pt;
@@ -684,6 +756,7 @@ export function downloadBarcodePdf(options: BarcodePrintOptions): void {
     labelWidthMm,
     labelHeightMm,
     columnsCount,
+    codeType = 'qr',
     flapLeftWidthPct = 33,
     flapRightWidthPct = 33,
     marginTopMm = 0.8,
@@ -757,6 +830,7 @@ export function downloadBarcodePdf(options: BarcodePrintOptions): void {
         showBarcodeText,
         widthMm: labelWidthMm,
         heightMm: labelHeightMm,
+        codeType,
         weightVal,
         karatVal,
         flapLeftWidthPct,
@@ -815,6 +889,7 @@ export function downloadBarcodePdf(options: BarcodePrintOptions): void {
         showBarcodeText,
         widthMm: labelWidthMm,
         heightMm: labelHeightMm,
+        codeType,
         offsetX: x,
         offsetY: y,
         weightVal,
@@ -846,6 +921,7 @@ interface VectorDrawParams {
   showBarcodeText: boolean;
   widthMm: number;
   heightMm: number;
+  codeType?: 'qr' | 'barcode';
   offsetX?: number;
   offsetY?: number;
   weightVal?: string;
@@ -873,6 +949,7 @@ function drawSingleThermalVector(doc: jsPDF, params: VectorDrawParams): void {
     showBarcodeText,
     widthMm,
     heightMm,
+    codeType = 'qr',
     offsetX = 0,
     offsetY = 0,
     weightVal = '8.000g',
@@ -950,35 +1027,31 @@ function drawSingleThermalVector(doc: jsPDF, params: VectorDrawParams): void {
       : Math.max(6.0, Math.min(24.0, (heightMm - 8.0) * 0.75));
     const barcodeY = totalOffsetY + marginTopMm + 2.1;
 
-    try {
-      const cleanCode = (code || '').trim();
-      const isEan = /^\d{13}$/.test(cleanCode);
-      const canvas = document.createElement('canvas');
-      JsBarcode(canvas, cleanCode, {
-        format: isEan ? 'EAN13' : 'CODE128',
-        displayValue: false,
-        margin: 8,
-        height: 120,
-        width: 2.5,
-        background: '#ffffff',
-        lineColor: '#000000',
-      });
-      const canvasAspect = canvas.width / canvas.height;
-      let drawW = maxBarcodeW;
-      let drawH = drawW / canvasAspect;
-      if (drawH > barcodeH) {
-        drawH = barcodeH;
-        drawW = drawH * canvasAspect;
-      }
-      const drawX = flapCenterX - drawW / 2;
-      const drawY = barcodeY + (barcodeH - drawH) / 2;
-      const barcodeDataUrl = canvas.toDataURL('image/png');
-      doc.addImage(barcodeDataUrl, 'PNG', drawX, drawY, drawW, drawH);
-    } catch {
+    const isQr = codeType === 'qr';
+
+    if (isQr) {
+      const qrSide = Math.min(barcodeH, maxBarcodeW);
+      const drawX = flapCenterX - qrSide / 2;
+      const drawY = barcodeY + (barcodeH - qrSide) / 2;
       try {
+        const qrDataUrl = createQrDataUrl(code, 180);
+        if (qrDataUrl) {
+          doc.addImage(qrDataUrl, 'PNG', drawX, drawY, qrSide, qrSide);
+        } else {
+          doc.setFillColor(0, 0, 0);
+          doc.rect(drawX, drawY, qrSide, qrSide, 'F');
+        }
+      } catch {
+        doc.setFillColor(0, 0, 0);
+        doc.rect(drawX, drawY, qrSide, qrSide, 'F');
+      }
+    } else {
+      try {
+        const cleanCode = (code || '').trim();
+        const isEan = /^\d{13}$/.test(cleanCode);
         const canvas = document.createElement('canvas');
-        JsBarcode(canvas, code, {
-          format: 'CODE128',
+        JsBarcode(canvas, cleanCode, {
+          format: isEan ? 'EAN13' : 'CODE128',
           displayValue: false,
           margin: 8,
           height: 120,
@@ -998,8 +1071,32 @@ function drawSingleThermalVector(doc: jsPDF, params: VectorDrawParams): void {
         const barcodeDataUrl = canvas.toDataURL('image/png');
         doc.addImage(barcodeDataUrl, 'PNG', drawX, drawY, drawW, drawH);
       } catch {
-        doc.setFillColor(0, 0, 0);
-        doc.rect(flapX + marginLeftMm, barcodeY, maxBarcodeW, barcodeH, 'F');
+        try {
+          const canvas = document.createElement('canvas');
+          JsBarcode(canvas, code, {
+            format: 'CODE128',
+            displayValue: false,
+            margin: 8,
+            height: 120,
+            width: 2.5,
+            background: '#ffffff',
+            lineColor: '#000000',
+          });
+          const canvasAspect = canvas.width / canvas.height;
+          let drawW = maxBarcodeW;
+          let drawH = drawW / canvasAspect;
+          if (drawH > barcodeH) {
+            drawH = barcodeH;
+            drawW = drawH * canvasAspect;
+          }
+          const drawX = flapCenterX - drawW / 2;
+          const drawY = barcodeY + (barcodeH - drawH) / 2;
+          const barcodeDataUrl = canvas.toDataURL('image/png');
+          doc.addImage(barcodeDataUrl, 'PNG', drawX, drawY, drawW, drawH);
+        } catch {
+          doc.setFillColor(0, 0, 0);
+          doc.rect(flapX + marginLeftMm, barcodeY, maxBarcodeW, barcodeH, 'F');
+        }
       }
     }
 

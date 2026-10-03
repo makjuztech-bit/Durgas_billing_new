@@ -17,7 +17,7 @@ export const initialSettings = {
   email: 'durgaspos@gmail.com',
   gstNo: '33BWZPN2210D1ZO',
   gstin: '33BWZPN2210D1ZO',
-  logoUrl: './logo.png',
+  logoUrl: './durgas-logo.jpeg',
   currency: 'INR',
   taxRate: 0,
 };

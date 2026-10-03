@@ -92,8 +92,7 @@ describe('Barcode Software Verification & Validator', () => {
     });
 
     it('handles invalid inputs gracefully', () => {
-      // @ts-expect-error testing invalid type
-      expect(verifyBarcodeSoftware(null).valid).toBe(false);
+      expect(verifyBarcodeSoftware(null as any).valid).toBe(false);
       expect(verifyBarcodeSoftware('').valid).toBe(false);
     });
   });
