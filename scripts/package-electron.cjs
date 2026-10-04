@@ -518,13 +518,22 @@ function buildWindowsPackage(releaseVersionDir, version) {
   log('🪟', `Building Windows 64-bit Package...`);
 
   // 1. Extract Electron runtime
-  const winZip = findCachedElectronZip('win32');
-  if (!winZip || !fs.existsSync(winZip)) {
-    throw new Error('Windows Electron binary zip not found in cache. Run: npx electron install');
+  const localElectronDist = path.join(ROOT_DIR, 'node_modules/electron/dist');
+  if (fs.existsSync(path.join(localElectronDist, 'electron.exe'))) {
+    log('📦', `Using installed Electron runtime from node_modules/electron/dist...`);
+    copyDirSync(localElectronDist, appPackageDir);
+  } else {
+    const winZip = findCachedElectronZip('win32');
+    if (!winZip || !fs.existsSync(winZip)) {
+      throw new Error('Windows Electron binary not found in node_modules/electron/dist or cache. Run: node node_modules/electron/install.js');
+    }
+    log('📦', `Extracting Electron runtime from ${path.basename(winZip)}...`);
+    try {
+      execSync(`tar -xf "${winZip}" -C "${appPackageDir}"`, { stdio: 'inherit' });
+    } catch {
+      execSync(`powershell -Command "Expand-Archive -Path '${winZip}' -DestinationPath '${appPackageDir}' -Force"`, { stdio: 'inherit' });
+    }
   }
-
-  log('📦', `Extracting Electron runtime from ${path.basename(winZip)}...`);
-  execSync(`unzip -q -o "${winZip}" -d "${appPackageDir}"`, { stdio: 'inherit' });
 
   // 2. Rename executable
   const oldExe = path.join(appPackageDir, 'electron.exe');
@@ -552,7 +561,14 @@ function buildWindowsPackage(releaseVersionDir, version) {
   assembleCleanBackend(appResourceDir);
 
   // 5. Inject Windows SQLite Native Binary
-  const winSqliteBinary = path.join(ROOT_DIR, 'scripts/binaries/win32-x64/build/Release/node_sqlite3.node');
+  let winSqliteBinary = path.join(ROOT_DIR, 'scripts/binaries/win32-x64/build/Release/node_sqlite3.node');
+  if (!fs.existsSync(winSqliteBinary)) {
+    const backendSqlite = path.join(ROOT_DIR, 'backend/node_modules/sqlite3/build/Release/node_sqlite3.node');
+    if (fs.existsSync(backendSqlite)) {
+      winSqliteBinary = backendSqlite;
+    }
+  }
+
   if (fs.existsSync(winSqliteBinary)) {
     log('🔧', 'Injecting Windows-native SQLite3 binary...');
     
@@ -575,7 +591,7 @@ function buildWindowsPackage(releaseVersionDir, version) {
     }
     success('Windows SQLite native binary injected');
   } else {
-    warn('Windows sqlite3 binary not found in scripts/binaries/win32-x64');
+    warn('Windows sqlite3 binary not found in scripts/binaries/win32-x64 or backend/node_modules');
   }
 
   // 6. Write minimal package.json
@@ -605,7 +621,7 @@ function buildWindowsPackage(releaseVersionDir, version) {
 appId: com.makjuz.durgasbilling
 productName: ${DISPLAY_NAME}
 directories:
-  output: "${releaseVersionDir}"
+  output: "${releaseVersionDir.replace(/\\/g, '/')}"
 win:
   target: nsis
   icon: "public/logo.png"
@@ -632,7 +648,11 @@ nsis:
     warn(`Single .exe build blocked by network (electron-builder needs internet). Falling back to ZIP...`);
     const zipName = `${DISPLAY_NAME}-v${version}-Windows.zip`;
     finalExePath = path.join(releaseVersionDir, zipName);
-    execSync(`cd "${releaseVersionDir}" && zip -q -r -9 "${zipName}" "${targetFolderName}"`, { stdio: 'inherit' });
+    try {
+      execSync(`tar -a -c -f "${zipName}" "${targetFolderName}"`, { cwd: releaseVersionDir, stdio: 'inherit' });
+    } catch {
+      execSync(`powershell -Command "Compress-Archive -Path '${path.join(releaseVersionDir, targetFolderName)}' -DestinationPath '${finalExePath}' -Force"`, { stdio: 'inherit' });
+    }
     if (fs.existsSync(finalExePath)) {
       const stats = fs.statSync(finalExePath);
       const sizeMb = (stats.size / (1024 * 1024)).toFixed(1);
@@ -804,7 +824,8 @@ async function run() {
   console.log('=============================================================\n');
 
   const args = process.argv.slice(2);
-  const winOnly = args.includes('--win-only');
+  const isWin = process.platform === 'win32';
+  const winOnly = args.includes('--win-only') || (isWin && !args.includes('--all') && !args.includes('--linux-only'));
   const linuxOnly = args.includes('--linux-only');
 
   const targetWindows = !linuxOnly;

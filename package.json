@@ -1,7 +1,7 @@
 {
   "name": "durgas-billing-pos",
   "private": true,
-  "version": "1.0.32",
+  "version": "1.0.34",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {

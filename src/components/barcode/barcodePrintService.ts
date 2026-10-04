@@ -16,8 +16,8 @@ export function createQrSvg(code: string, size: number = 64): string {
       React.createElement(QRCodeSVG, {
         value: cleanCode,
         size: size,
-        level: 'M',
-        includeMargin: false,
+        level: 'H',
+        includeMargin: true,
       })
     );
   } catch (err) {

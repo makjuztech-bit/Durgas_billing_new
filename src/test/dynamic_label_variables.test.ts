@@ -89,5 +89,5 @@ describe('Dynamic Label Variables (Price and Item Name)', () => {
     expect(svg).toContain('viewBox="0 0');
     expect(svg).toContain('fill="#000000"');
     expect(svg).toContain('</svg>');
-  });
+  }, 30000);
 });

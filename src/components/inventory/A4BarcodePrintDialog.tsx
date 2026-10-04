@@ -772,8 +772,8 @@ export const A4BarcodePrintDialog: React.FC<A4BarcodePrintDialogProps> = ({
                              <QRCodeSVG
                                value={barcode || 'SK-000000'}
                                size={20}
-                               level="M"
-                               includeMargin={false}
+                               level="H"
+                               includeMargin={true}
                              />
                            ) : (
                              <Barcode
